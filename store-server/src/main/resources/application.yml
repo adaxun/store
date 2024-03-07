@@ -1,0 +1,31 @@
+#服务器端口
+server:
+  port: 8082
+
+
+
+spring:
+  profiles:
+    active: dev
+#     暂时开启 接受  循环依赖r, 子模块之间可能出现循环依赖
+  main:
+    allow-circular-references: true
+
+  datasource:
+    druid:
+      driver-class-name: ${wenxun.datasource.driver-class-name}
+      url: jdbc:mysql://${wenxun.datasource.host}:${wenxun.datasource.port}/${wenxun.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${wenxun.datasource.username}
+      password: ${wenxun.datasource.password}
+    type:  com.alibaba.druid.pool.DruidDataSource
+
+
+
+# mybatis 配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package:  com.wenxun.entity
+  configuration:
+#    驼峰命名
+    map-underscore-to-camel-case: true
+
