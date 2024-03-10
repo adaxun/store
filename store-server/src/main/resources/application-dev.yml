@@ -1,7 +1,7 @@
 wenxun:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    host: loalhost
+    host: localhost
     port: 3306
     database: seckill
     username: root

@@ -46,4 +46,19 @@ public interface ItemMapper {
      * @mbg.generated
      */
     int updateByPrimaryKey(Item record);
+
+
+    /**
+     * 更新销量
+     * @param itemId
+     * @param amount
+     */
+    void increaseSales(Integer itemId, Integer amount);
+
+
+    /**
+     *
+     * @return
+     */
+    List<Item> selectOnPromotion();
 }

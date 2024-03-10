@@ -64,4 +64,20 @@
     select id, title, price, sales, image_url, description
     from item
   </select>
+
+  <update id="increaseSales">
+    update item
+    set sales =sales+#{param2}
+    where id = #{param1}
+  </update>
+
+  <select id="selectOnPromotion" resultMap="BaseResultMap">
+    select id, title, price, sales, image_url, description
+    from item
+    where exists (
+        select 1 from promotion
+        where item_id = item.id
+          and start_time&lt;=CURRENT_TIMESTAMP and end_time &gt;=CURRENT_TIMESTAMP
+    )
+  </select>
 </mapper>

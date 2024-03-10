@@ -29,3 +29,15 @@ mybatis:
 #    驼峰命名
     map-underscore-to-camel-case: true
 
+frontend:
+  web:
+    path: http://127.0.0.1:5500
+
+
+logging:
+  level:
+   com:
+   wenxun:
+    mapper: debug
+    service: info
+    controller: info
