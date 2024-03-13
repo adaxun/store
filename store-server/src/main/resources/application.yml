@@ -1,6 +1,11 @@
 #服务器端口
 server:
   port: 8082
+  tomcat:
+    threads:
+      min-spare: 50
+      max: 300
+    accept-count: 600
 
 
 
@@ -17,7 +22,11 @@ spring:
       url: jdbc:mysql://${wenxun.datasource.host}:${wenxun.datasource.port}/${wenxun.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${wenxun.datasource.username}
       password: ${wenxun.datasource.password}
+      initial-size: 50
+      min-idle: 50
+      max-active: 200
     type:  com.alibaba.druid.pool.DruidDataSource
+
 
 
 
@@ -31,13 +40,13 @@ mybatis:
 
 frontend:
   web:
-    path: http://127.0.0.1:5500
+    path: ${wenxun.frontend.web.path}
 
 
 logging:
   level:
    com:
    wenxun:
-    mapper: debug
+    mapper: debug # debug 可以打印mysql命令
     service: info
     controller: info

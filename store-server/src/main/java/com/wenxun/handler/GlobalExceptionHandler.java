@@ -33,17 +33,17 @@ public class GlobalExceptionHandler {
      * @param sqlIntegrityConstraintViolationException
      * @return
      */
-//    @ExceptionHandler
-//    public Result exceptionHandler(SQLIntegrityConstraintViolationException sqlIntegrityConstraintViolationException){
-//        String message = sqlIntegrityConstraintViolationException.getMessage();
-//        if(message.contains("Duplicate entry")){
-//            String[] split = message.split(" ");
-//            String username = split[2];
-//            String msg = username + MessageConstant.ALREADY_EXISTS;
-//            return Result.error(msg);
-//        }else{
-//            return Result.error(MessageConstant.UNKNOWN_ERROR);
-//        }
-//    }
+    @ExceptionHandler
+    public Result exceptionHandler(SQLIntegrityConstraintViolationException sqlIntegrityConstraintViolationException){
+        String message = sqlIntegrityConstraintViolationException.getMessage();
+        if(message.contains("Duplicate entry")){
+            String[] split = message.split(" ");
+            String username = split[2];
+            String msg = username + MessageConstant.ALREADY_EXISTS;
+            return Result.error(msg);
+        }else{
+            return Result.error(MessageConstant.UNKNOWN_ERROR);
+        }
+    }
 
 }
