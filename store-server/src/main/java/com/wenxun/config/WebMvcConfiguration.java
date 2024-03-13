@@ -1,8 +1,11 @@
 package com.wenxun.config;
 
+import com.wenxun.interceptor.JwtTokenInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -19,6 +22,20 @@ import springfox.documentation.spring.web.plugins.Docket;
 @Configuration
 @Slf4j
 public class WebMvcConfiguration extends WebMvcConfigurationSupport {
+
+    @Autowired
+    JwtTokenInterceptor jwtTokenInterceptor;
+
+    /**
+     * 配置拦截器
+     * @param registry
+     */
+    @Override
+    protected void addInterceptors(InterceptorRegistry registry) {
+        log.info("配置拦截器");
+        registry.addInterceptor(jwtTokenInterceptor)
+                .addPathPatterns("/order/**");
+    }
 
     /**
      * 通过knife4j生成接口文档

@@ -12,7 +12,7 @@ server:
 spring:
   profiles:
     active: dev
-#     暂时开启 接受  循环依赖r, 子模块之间可能出现循环依赖
+#    开启 接受  循环依赖, 子模块之间可能出现循环依赖
   main:
     allow-circular-references: true
 
@@ -22,12 +22,16 @@ spring:
       url: jdbc:mysql://${wenxun.datasource.host}:${wenxun.datasource.port}/${wenxun.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${wenxun.datasource.username}
       password: ${wenxun.datasource.password}
-      initial-size: 50
-      min-idle: 50
-      max-active: 200
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
     type:  com.alibaba.druid.pool.DruidDataSource
 
-
+  redis:
+    host: ${wenxun.redis.host}
+    port: ${wenxun.redis.port}
+    password: ${wenxun.redis.password}
+    database: ${wenxun.redis.database}
 
 
 # mybatis 配置
@@ -50,3 +54,8 @@ logging:
     mapper: debug # debug 可以打印mysql命令
     service: info
     controller: info
+
+jwt:
+  secretKey: store-kill
+  ttl: 7200000
+  frontEndTokenName: token

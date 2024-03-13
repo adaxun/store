@@ -32,6 +32,11 @@
             <artifactId>store-common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+            <dependency>
+                <groupId>com.github.whvcse</groupId>
+                <artifactId>easy-captcha</artifactId>
+                <version>1.6.2</version>
+            </dependency>
     </dependencies>
 
     <!-- 在含有启动类的子模块的pom.xml中 -->
