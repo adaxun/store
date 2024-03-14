@@ -28,4 +28,11 @@ public interface UserService {
      * @return
      */
     UserInfo getById(Integer id);
+
+    /**
+     * 从redis缓存中获取用户
+     * @param id
+     * @return
+     */
+    UserInfo getByIdInCache(Integer id);
 }

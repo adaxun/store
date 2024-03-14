@@ -1,7 +1,9 @@
 package com.wenxun.service.impl;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.wenxun.constant.MessageConstant;
 import com.wenxun.dto.OrderDTO;
+import com.wenxun.dto.OrderTokenDTO;
 import com.wenxun.entity.*;
 import com.wenxun.exception.*;
 import com.wenxun.mapper.OrderInfoMapper;
@@ -12,6 +14,8 @@ import com.wenxun.service.UserService;
 import com.wenxun.utils.TimeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.concurrent.Future;
 
 /**
  * @author wenxun
@@ -28,16 +33,27 @@ import java.sql.Timestamp;
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @Autowired
-    ItemService itemService;
+    private ItemService itemService;
 
     @Autowired
-    OrderInfoMapper orderInfoMapper;
+    private OrderInfoMapper orderInfoMapper;
 
     @Autowired
-    SerialNumberMapper serialNumberMapper;
+    private SerialNumberMapper serialNumberMapper;
+
+    @Autowired
+    private ThreadPoolTaskExecutor taskExecutor;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    /**
+     * 每秒产生1000. 个令牌
+     */
+    private RateLimiter rateLimiter = RateLimiter.create(1000.0);
 
     /**
      * 生成订单id 日期+index： 20240309+000000000001 total：20位
@@ -45,7 +61,7 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    String generateOrderId(){
+    public String generateOrderId(){
         SerialNumber serialNumber = serialNumberMapper.selectByPrimaryKey("order_serial");
 
         StringBuilder str = new StringBuilder();
@@ -61,6 +77,34 @@ public class OrderServiceImpl implements OrderService {
         return str.toString();
     }
 
+    @Override
+    public void prepareOrder(OrderTokenDTO orderDTO) {
+        /**
+         * 非阻塞的获取令牌，如果获取不到，就抛出异常
+         */
+        if(!rateLimiter.tryAcquire()){
+            throw new RateLimitErrorException(MessageConstant.NET_ERROR);
+        }
+        /**
+         * 验证限流用的令牌
+         */
+        String tokenKey = "promotion:token:"+orderDTO.getUserId()+":"+orderDTO.getPromotionId()+":"+orderDTO.getItemId();
+        String promotionToken =(String) redisTemplate.opsForValue().get(tokenKey);
+        if(orderDTO.getPromotionToken()==null||promotionToken==null||!promotionToken.equals(orderDTO.getPromotionToken())){
+            throw new PromotionErrorException(MessageConstant.PROMOTION_TOKEN_ERROR);
+        }
+        OrderDTO newOrderDTO=new OrderDTO();
+        BeanUtils.copyProperties(orderDTO,newOrderDTO);
+        Future future = taskExecutor.submit(()->{
+            this.createOrderAsync(newOrderDTO);
+            return null;
+        });
+        try {
+            future.get();
+        }catch (Exception e){
+            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
+        }
+    }
 
     @Transactional
     @Override
@@ -117,5 +161,19 @@ public class OrderServiceImpl implements OrderService {
         orderInfoMapper.insert(orderInfo);
 
         itemService.updateSales(orderDTO.getItemId(),orderDTO.getAmount());
+    }
+
+    @Override
+    public void createOrderAsync(OrderDTO orderDTO) {
+        String stockKey = "item:stock:" + orderDTO.getItemId();
+        String stockStr = (String) redisTemplate.opsForValue().get(stockKey);
+//        检查库存
+        if (stockStr != null) {
+            Integer stock = Integer.valueOf(stockStr);
+            if (stock <= 0) {
+                throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
+            }
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 package com.wenxun.service;
 
 import com.wenxun.entity.Item;
+import io.swagger.models.auth.In;
 
 import java.util.List;
 
@@ -16,6 +17,8 @@ public interface ItemService {
      * @return
      */
     Item getById(Integer id);
+
+    Item getByIdInCache(Integer id);
 
     /**
      * 减库存

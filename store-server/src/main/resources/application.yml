@@ -33,6 +33,12 @@ spring:
     password: ${wenxun.redis.password}
     database: ${wenxun.redis.database}
 
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 20
+        queue-capacity: 50
 
 # mybatis 配置
 mybatis:
@@ -41,6 +47,10 @@ mybatis:
   configuration:
 #    驼峰命名
     map-underscore-to-camel-case: true
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: seckill_producer
 
 frontend:
   web:

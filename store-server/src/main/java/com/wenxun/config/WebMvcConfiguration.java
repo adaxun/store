@@ -34,7 +34,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     protected void addInterceptors(InterceptorRegistry registry) {
         log.info("配置拦截器");
         registry.addInterceptor(jwtTokenInterceptor)
-                .addPathPatterns("/order/**");
+                .addPathPatterns("/order/**")
+                .excludePathPatterns("/order/captcha");
     }
 
     /**

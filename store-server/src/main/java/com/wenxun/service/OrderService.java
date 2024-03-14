@@ -1,6 +1,7 @@
 package com.wenxun.service;
 
 import com.wenxun.dto.OrderDTO;
+import com.wenxun.dto.OrderTokenDTO;
 
 /**
  * @author wenxun
@@ -13,5 +14,15 @@ public interface OrderService {
      */
     void createOrder(OrderDTO orderDTO);
 
+    /**
+     * 创建订单前的 令牌桶限流
+     * @param orderDTO
+     */
+    void prepareOrder(OrderTokenDTO orderDTO);
 
+    /**
+     * 异步扣减库存实现下单
+     * @param orderDTO
+     */
+    void createOrderAsync(OrderDTO orderDTO);
 }

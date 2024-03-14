@@ -50,16 +50,16 @@ public class UserController {
     }
 
     /**
-     * 生成验证码
+     * 生成推荐码
      * @param phone
      * @return
      */
     @GetMapping("/otp/{phone}")
-    @ApiOperation("获取验证码")
+    @ApiOperation("获取推荐码")
     public Result getOTP(@PathVariable String phone ){
 
         String otp=generateOTP();
-        log.info("手机号：{} 的验证码：{}",phone,otp);
+        log.info("手机号：{} 的推荐码：{}",phone,otp);
         redisTemplate.opsForValue().set(phone,otp,5, TimeUnit.MINUTES);
         return  Result.success();
     }
@@ -89,7 +89,7 @@ public class UserController {
         claims.put(JwtConstant.USER_ID,userInfo.getId());
         String token  = JwtUtils.createJWT(jwtProerties.getSecretKey(), jwtProerties.getTtl(), claims);
         log.info("登录用户jwt:{}",token);
-        redisTemplate.opsForValue().set(token,userInfo);
+        redisTemplate.opsForValue().set(token,userInfo,30,TimeUnit.HOURS);
         return Result.success(token);
     }
 
@@ -106,6 +106,7 @@ public class UserController {
         if(token!=null) {
             redisTemplate.delete(token);
         }
+        log.info("当前用户已注销");
         return Result.success();
     }
 

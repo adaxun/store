@@ -13,11 +13,13 @@ import com.wenxun.utils.Md5Utils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author wenxun
@@ -29,6 +31,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserInfoMapper userInfoMapper;
 
+    @Autowired
+    RedisTemplate redisTemplate;
 
     @Override
     public UserInfo login(UserDTO userDTO) {
@@ -69,5 +73,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserInfo getById(Integer id) {
         return  userInfoMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    public UserInfo getByIdInCache(Integer id) {
+        if(id<0){
+            return null;
+        }
+
+        String key = "user:"+id;
+        UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(key);
+        if(userInfo==null){
+            userInfo =  userInfoMapper.selectByPrimaryKey(id);
+            if(userInfo!=null){
+                redisTemplate.opsForValue().set(key,userInfo,30, TimeUnit.MINUTES);
+            }
+        }
+        return userInfo;
     }
 }

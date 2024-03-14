@@ -1,7 +1,10 @@
 package com.wenxun.interceptor;
 
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.wenxun.constant.JwtConstant;
 import com.wenxun.properties.JwtProerties;
+import com.wenxun.result.Result;
 import com.wenxun.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.util.HashMap;
 
 /**
  * @author wenxun
@@ -47,7 +52,14 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
             return true;
         }
         catch (Exception e){
-            response.setStatus(401);
+            log.error("拦截异常：{}",e.getMessage());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            PrintWriter writer = response.getWriter();
+            HashMap<String,String> map = new HashMap<>(2);
+            map.put("code","401");
+            map.put("message","请先登录！");
+            writer.write(JSONObject.toJSONString(Result.error(map)));
             return false;
         }
 

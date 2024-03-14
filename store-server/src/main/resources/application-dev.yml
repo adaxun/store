@@ -14,8 +14,11 @@ wenxun:
     database: 10
 
   rocketmq:
-    host: localhost
-    port:
+    name-server: localhost:9876
+    producer:
+      group: seckill_producer
+
+
 
   frontend:
     web:

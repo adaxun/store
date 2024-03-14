@@ -22,9 +22,4 @@ public class Item implements Serializable {
      * 设定一个商品只能参加一个活动
      */
     private Promotion promotion;
-    private static final long serialVersionUID = 1L;
-    public Integer getId() {
-        return id;
-    }
-
 }
