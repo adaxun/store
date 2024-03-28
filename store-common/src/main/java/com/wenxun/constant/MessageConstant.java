@@ -17,12 +17,13 @@ public class MessageConstant {
     public static final String USER_NOT_LOGIN = "用户未登录";
     public static final String OPT_ERROR = "验证码错误";
     public static final String ORDER_PARAM_ERROR = "订单参数错误";
+    public static final String STOCK_LOG_PARAM_ERROR = "库存流水参数错误";
     public static final String STOCK_NOT_ENOUGH = "库存不足";
     public static final String DUPLICATE_PHONE_ERROR = "手机号已注册";
     public static final String CAPTCHA_ERROR = "验证码错误";
     public static final String PROMOTION_TOKEN_ERROR = "活动已售空，请稍后再试";
     public static final String NET_ERROR = "服务繁忙，请稍后再试";
-    public static final String _ERROR = "服务繁忙，请稍后再试";
+    public static final String ORDER_ERROR = "订单创建失败，请稍后再试";
 
 
 

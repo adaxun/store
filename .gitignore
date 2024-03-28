@@ -33,3 +33,4 @@ build/
 .vscode/
 
 **.jar
+/store-server/src/test/

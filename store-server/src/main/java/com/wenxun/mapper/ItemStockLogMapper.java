@@ -47,4 +47,12 @@ public interface ItemStockLogMapper {
      * @mbg.generated
      */
     int updateByPrimaryKey(ItemStockLog record);
+
+    /**
+     * 更新库存流水状态
+     * @param id
+     * @param status
+     * @return
+     */
+    int updateStatusById(String id, Integer status);
 }

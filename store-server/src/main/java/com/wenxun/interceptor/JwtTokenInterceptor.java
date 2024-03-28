@@ -24,7 +24,7 @@ import java.util.HashMap;
  */
 @Slf4j
 @Component
-public class JwtTokenInterceptor implements HandlerInterceptor {
+public class    JwtTokenInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtProerties jwtProerties;

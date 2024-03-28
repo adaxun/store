@@ -1,5 +1,6 @@
 package com.wenxun.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.util.concurrent.RateLimiter;
 import com.wenxun.constant.MessageConstant;
 import com.wenxun.dto.OrderDTO;
@@ -10,11 +11,18 @@ import com.wenxun.mapper.OrderInfoMapper;
 import com.wenxun.mapper.SerialNumberMapper;
 import com.wenxun.service.ItemService;
 import com.wenxun.service.OrderService;
-import com.wenxun.service.UserService;
 import com.wenxun.utils.TimeUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.LocalTransactionState;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -30,10 +38,9 @@ import java.util.concurrent.Future;
  * @date 2024.03.09 12:55
  */
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private ItemService itemService;
@@ -49,6 +56,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
     /**
      * 每秒产生1000. 个令牌
@@ -106,6 +116,10 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 对生成订单进行解耦，在大闸的时候 预先校验下单参数
+     * @param orderDTO
+     */
     @Transactional
     @Override
     public void createOrder(OrderDTO orderDTO) {
@@ -115,36 +129,36 @@ public class OrderServiceImpl implements OrderService {
         ||orderDTO.getUserId()==null||orderDTO.getPromotionId()==null){
             throw new OrderParamException(MessageConstant.ORDER_PARAM_ERROR);
         }
-        //校验用户
-        UserInfo userInfo = userService.getById(orderDTO.getUserId());
-        if(userInfo==null){
-            throw  new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
-        }
+//        //校验用户
+//        UserInfo userInfo = userService.getById(orderDTO.getUserId());
+//        if(userInfo==null){
+//            throw  new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
+//        }
         //校验商品
         Item item = itemService.getById(orderDTO.getItemId());
         if(item==null){
             throw  new ItemNotFoundException(MessageConstant.Item_NOT_FOUND);
         }
-        //校验库存
-        Integer stock = item.getItemStock().getStock();
-        if(stock<orderDTO.getAmount()){
-            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
-        }
+//        //校验库存
+//        Integer stock = item.getItemStock().getStock();
+//        if(stock<orderDTO.getAmount()){
+//            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
+//        }
+//
+//        //校验活动：是否存在/时间满足条件
+//        Promotion promotion = item.getPromotion();
+//        if(promotion==null){
+//            throw new PromotionErrorException(MessageConstant.PROMOTION_NOT_FOUND);
+//        }
+//        else if(!promotion.getStatus()){
+//            throw  new PromotionErrorException(MessageConstant.PROMOTION_TIME_ERROR);
+//        }
 
-        //校验活动：是否存在/时间满足条件
-        Promotion promotion = item.getPromotion();
-        if(promotion==null){
-            throw new PromotionErrorException(MessageConstant.PROMOTION_NOT_FOUND);
-        }
-        else if(!promotion.getStatus()){
-            throw  new PromotionErrorException(MessageConstant.PROMOTION_TIME_ERROR);
-        }
-
-        //扣减库存
-        boolean flag = itemService.decreaseStock(orderDTO.getItemId(),orderDTO.getAmount());
-        if(!flag){
-            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
-        }
+//        //undate：扣减库存-> MQ异步更新库存 24.3.14
+//        boolean flag = itemService.decreaseStock(orderDTO.getItemId(),orderDTO.getAmount());
+//        if(!flag){
+//            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
+//        }
 
         //生成订单
         OrderInfo orderInfo =new OrderInfo();
@@ -152,7 +166,7 @@ public class OrderServiceImpl implements OrderService {
 
         BeanUtils.copyProperties(orderDTO,orderInfo);
         orderInfo.setOrderAmount(orderDTO.getAmount());
-        orderInfo.setOrderPrice(promotion.getPromotionPrice());
+        orderInfo.setOrderPrice(item.getPromotion().getPromotionPrice());
         orderInfo.setOrderTime(new Timestamp(System.currentTimeMillis()));
 
         BigDecimal total = orderInfo.getOrderPrice().multiply(new BigDecimal(orderDTO.getAmount()));
@@ -160,9 +174,33 @@ public class OrderServiceImpl implements OrderService {
 
         orderInfoMapper.insert(orderInfo);
 
-        itemService.updateSales(orderDTO.getItemId(),orderDTO.getAmount());
+        /**
+         * 更新销量
+         * 事务加锁，效率低，可以改为消息队列 异步更新
+         */
+//        itemService.updateSales(orderDTO.getItemId(),orderDTO.getAmount());
+        JSONObject payload = new JSONObject();
+        payload.put("itemId", orderDTO.getItemId());
+        payload.put("amount", orderDTO.getAmount());
+        Message message= MessageBuilder.withPayload(payload).build();
+        rocketMQTemplate.asyncSend("order:increaseSales",message,new SendCallback(){
+            @Override
+            public void onSuccess(SendResult sendResult) {
+            log.info("更新销量成功");
+            }
+
+            @Override
+            public void onException(Throwable throwable) {
+            log.error("更新消息失败");
+            }
+        },60*1000);
+
     }
 
+    /**
+     * 发送异步事件消息到MQ
+     * @param orderDTO
+     */
     @Override
     public void createOrderAsync(OrderDTO orderDTO) {
         String stockKey = "item:stock:" + orderDTO.getItemId();
@@ -173,6 +211,41 @@ public class OrderServiceImpl implements OrderService {
             if (stock <= 0) {
                 throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
             }
+        }
+
+        /**
+         * 生成一条库存流水
+         */
+        ItemStockLog itemStockLog = itemService.createItemStockLog(orderDTO.getItemId(), orderDTO.getAmount());
+
+        /**
+         * 使用fastJson 序列化对象消息
+         * payload 放到消息里 用于消息队列消费
+         * args 用于本地事务执行
+         */
+        JSONObject payload = new JSONObject();
+        payload.put("itemId", orderDTO.getItemId());
+        payload.put("amount", orderDTO.getAmount());
+        payload.put("itemStockLogId",itemStockLog.getId());
+
+        JSONObject args = new JSONObject();
+        args.put("itemId", orderDTO.getItemId());
+        args.put("amount", orderDTO.getAmount());
+        args.put("userId",orderDTO.getUserId());
+        args.put("promotionId",orderDTO.getPromotionId());
+        payload.put("itemStockLogId",itemStockLog.getId());
+
+        Message message= MessageBuilder.withPayload(payload.toString()).build();
+        try {
+            TransactionSendResult result =rocketMQTemplate.sendMessageInTransaction("order:decrease_stock",message, args);
+            //发送消息到MQ
+            if(result.getLocalTransactionState()== LocalTransactionState.ROLLBACK_MESSAGE
+                    ||result.getLocalTransactionState()== LocalTransactionState.UNKNOW){
+                throw new OrderParamException(MessageConstant.ORDER_ERROR);
+            }
+
+        }catch (Exception e){
+           throw new OrderParamException(MessageConstant.ORDER_ERROR);
         }
 
     }

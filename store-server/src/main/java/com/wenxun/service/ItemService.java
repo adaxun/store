@@ -1,6 +1,7 @@
 package com.wenxun.service;
 
 import com.wenxun.entity.Item;
+import com.wenxun.entity.ItemStockLog;
 import io.swagger.models.auth.In;
 
 import java.util.List;
@@ -39,4 +40,26 @@ public interface ItemService {
      * @return
      */
     List<Item> findItemOnPromotion();
+
+    /**
+     * 创建订单流水
+     * @param itemId
+     * @param amount
+     * @return
+     */
+    ItemStockLog createItemStockLog(Integer itemId,Integer amount);
+
+    /**
+     * 根据id更新流水状态
+     * @param id
+     * @param status
+     */
+    void updateItemStockLog(String id,Integer status);
+
+    /**
+     * 根据id获取流水
+     * @param id
+     * @return
+     */
+    ItemStockLog getItemStockLogById(String id);
 }
