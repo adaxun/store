@@ -43,9 +43,9 @@ public class OrderController {
     @Autowired
     private  PromotionService promotionService;
 
-    @PostMapping("/create{token}")
+    @PostMapping("/create")
     @ApiOperation("创建订单")
-    public Result create(@PathVariable String token, @RequestBody OrderTokenDTO orderDTO){
+    public Result create(String token, @RequestBody OrderTokenDTO orderDTO){
         UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(token);
         orderDTO.setUserId(userInfo.getId());
         log.info("创建订单:{}",orderDTO);
@@ -77,15 +77,16 @@ public class OrderController {
         }
     }
 
-    @PostMapping("/token{token}")
+    @PostMapping("/token")
     @ApiOperation("验证码校验+通行令牌")
-    public Result<String> token(@PathVariable String token ,@RequestBody OrderDTO orderDTO){
-        if(token==null){
+    public Result<String> token(String token ,@RequestBody OrderDTO orderDTO){
+        String captcha=orderDTO.getCaptcha();
+        if(token==null||token.length()==0||captcha==null){
             throw  new CaptchaWrongException(MessageConstant.CAPTCHA_ERROR);
         }
         UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(token);
-        String captcha = redisTemplate.opsForValue().get("captcha:"+userInfo.getId().toString()).toString();
-        if( !token.equals(captcha)){
+        String realCaptcha = (String) redisTemplate.opsForValue().get("captcha:"+userInfo.getId().toString());
+        if( captcha==null||!realCaptcha.equals(captcha)){
             throw new CaptchaWrongException(MessageConstant.CAPTCHA_ERROR);
         }
         /**

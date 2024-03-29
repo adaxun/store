@@ -66,6 +66,6 @@ logging:
     controller: info
 
 jwt:
-  secretKey: store-kill
+  secretKey: store_kill
   ttl: 7200000
   frontEndTokenName: token

@@ -21,4 +21,5 @@ public class OrderDTO implements Serializable {
     Integer promotionId;
 
     Integer userId;
+    String captcha;
 }

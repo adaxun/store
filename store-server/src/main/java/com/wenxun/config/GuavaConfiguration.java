@@ -49,6 +49,5 @@ public class GuavaConfiguration {
                 .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build();
 
-
     }
 }

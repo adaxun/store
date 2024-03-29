@@ -83,6 +83,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    public boolean decreaseStockInCache(Integer itemId, Integer amount) {
+        //todo:fix it
+        return false;
+    }
+
+    @Override
     public void updateSales(Integer itemId, Integer amount) {
         itemMapper.increaseSales(itemId,amount);
     }

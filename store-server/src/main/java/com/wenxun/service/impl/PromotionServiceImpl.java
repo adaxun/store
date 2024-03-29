@@ -40,10 +40,10 @@ public class PromotionServiceImpl implements PromotionService {
         if(orderDTO.getUserId()<0||orderDTO.getPromotionId()<0||orderDTO.getItemId()<0){
             return null;
         }
-        //库存检查
-        String stockKey = "item:stock:" + orderDTO.getItemId();
-        String stock = (String) redisTemplate.opsForValue().get(stockKey);
-        if (stock!=null&&Integer.valueOf(stock)<=0){
+        //轻量的检查是否售空/ 如果不经过用户/商品/活动检查 直接减库存的话会多减了
+        //库存检查  通过标志位检查 保证原子性
+        String stockKey = "item:stock:over:" + orderDTO.getItemId();
+        if (redisTemplate.hasKey(stockKey)){
             return null;
         }
         //用户检查

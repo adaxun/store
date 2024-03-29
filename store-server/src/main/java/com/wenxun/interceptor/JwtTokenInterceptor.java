@@ -43,8 +43,8 @@ public class    JwtTokenInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String token = request.getHeader(jwtProerties.getFrontEndTokenName());
-
+//        String token = request.getHeader(jwtProerties.getFrontEndTokenName());
+        String token = request.getParameter(jwtProerties.getFrontEndTokenName());
         try {
             Claims claims = JwtUtils.parseJWT(jwtProerties.getSecretKey(),token);
             Integer userId = Integer.valueOf(claims.get(JwtConstant.USER_ID).toString());
@@ -59,7 +59,7 @@ public class    JwtTokenInterceptor implements HandlerInterceptor {
             HashMap<String,String> map = new HashMap<>(2);
             map.put("code","401");
             map.put("message","请先登录！");
-            writer.write(JSONObject.toJSONString(Result.error(map)));
+            writer.write(JSONObject.toJSONString(Result.error("请先登录",map)));
             return false;
         }
 

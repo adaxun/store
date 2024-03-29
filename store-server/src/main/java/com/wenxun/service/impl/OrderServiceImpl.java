@@ -20,6 +20,7 @@ import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -123,7 +124,6 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void createOrder(OrderDTO orderDTO) {
-
         //校验下单参数合法性
         if(orderDTO.getAmount()==null || orderDTO.getAmount()<1||orderDTO.getItemId()==null
         ||orderDTO.getUserId()==null||orderDTO.getPromotionId()==null){
@@ -135,7 +135,7 @@ public class OrderServiceImpl implements OrderService {
 //            throw  new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
 //        }
         //校验商品
-        Item item = itemService.getById(orderDTO.getItemId());
+        Item item = itemService.getByIdInCache(orderDTO.getItemId());
         if(item==null){
             throw  new ItemNotFoundException(MessageConstant.Item_NOT_FOUND);
         }
@@ -159,6 +159,12 @@ public class OrderServiceImpl implements OrderService {
 //        if(!flag){
 //            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
 //        }
+        boolean flag = itemService.decreaseStockInCache(orderDTO.getItemId(),orderDTO.getAmount());
+        if(!flag){
+            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
+        }
+        log.info("缓存先删完成！");
+
 
         //生成订单
         OrderInfo orderInfo =new OrderInfo();
@@ -203,14 +209,10 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void createOrderAsync(OrderDTO orderDTO) {
-        String stockKey = "item:stock:" + orderDTO.getItemId();
-        String stockStr = (String) redisTemplate.opsForValue().get(stockKey);
-//        检查库存
-        if (stockStr != null) {
-            Integer stock = Integer.valueOf(stockStr);
-            if (stock <= 0) {
-                throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
-            }
+        //通过标志位 原子性查看库存
+        String stockKey = "item:stock:over:" + orderDTO.getItemId();
+        if (redisTemplate.hasKey(stockKey)){
+            throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
         }
 
         /**
