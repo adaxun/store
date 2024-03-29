@@ -58,13 +58,13 @@ public class PromotionServiceImpl implements PromotionService {
         }
         //活动检查 /promotionId/status是否在时间有效期内
         if(item.getPromotion()==null||!item.getPromotion().getId().equals(orderDTO.getPromotionId())||
-        !item.getPromotion().getStatus()){
+        !item.getPromotion().checkStatus()){
             return null;
         }
         //发放令牌 先用大闸限流 活动库存10倍发放令牌,令牌通过雪花算法生成
         String grateKey = "promotion:gate"+orderDTO.getPromotionId();
 
-        if(redisTemplate.opsForValue().decrement(grateKey)<=0){
+        if(redisTemplate.opsForValue().decrement(grateKey)<0){
             return null;
         }
 

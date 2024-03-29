@@ -17,7 +17,7 @@ public class Promotion implements Serializable {
     private Integer itemId;
     private BigDecimal promotionPrice;
 
-    public boolean getStatus(){
+    public boolean checkStatus(){
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if(now.before(startTime)){
             return false;

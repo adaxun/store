@@ -9,6 +9,7 @@ import com.wenxun.entity.ItemStockLog;
 import com.wenxun.entity.Promotion;
 import com.wenxun.exception.ItemNotFoundException;
 import com.wenxun.exception.ItemStockLogParamErrorException;
+import com.wenxun.exception.OrderParamException;
 import com.wenxun.mapper.ItemMapper;
 import com.wenxun.mapper.ItemStockLogMapper;
 import com.wenxun.mapper.ItemStockMapper;
@@ -71,7 +72,7 @@ public class ItemServiceImpl implements ItemService {
         item.setItemStock(itemStock);
 
         Promotion promotion = promotionMapper.selectByItemId(id);
-        if(promotion!=null&&promotion.getStatus()) {
+        if(promotion!=null&&promotion.checkStatus()) {
             item.setPromotion(promotion);
         }
         return item;
@@ -82,10 +83,45 @@ public class ItemServiceImpl implements ItemService {
         return  itemStockMapper.decreaseStock(itemId,amount)==1;
     }
 
+    /**
+     * 缓存中扣库存
+     *    失败-> 回补到原状态 return false
+     *    成功-> if stock==0 设置售空状态
+     * @param itemId
+     * @param amount
+     * @return
+     */
     @Override
     public boolean decreaseStockInCache(Integer itemId, Integer amount) {
-        //todo:fix it
-        return false;
+        if(itemId<0||amount<=0){
+            throw new OrderParamException(MessageConstant.ORDER_PARAM_ERROR);
+        }
+        String stockKey ="item:stock:"+itemId ;
+        long flag = redisTemplate.opsForValue().decrement(stockKey,amount);
+        // <0 不够-> 扣减失败，还需回滚到扣库存前  ==0 正好售空，redis加入售空标志
+        if (flag<0){
+
+        }
+        else if(flag==0){
+           redisTemplate.opsForValue().set("item:stock:over:"+itemId,1);
+        }
+        return true;
+    }
+
+    /**
+     * 回补redis库存，回滚到扣减前
+     * @param itemId
+     * @param amount
+     * @return
+     */
+    @Override
+    public boolean increaseStockInCache(Integer itemId, Integer amount) {
+        if(itemId<=0||amount<=0){
+            throw new OrderParamException(MessageConstant.ORDER_PARAM_ERROR);
+        }
+        String stockKey ="item:stock:"+itemId ;
+        redisTemplate.opsForValue().increment(stockKey,amount);
+        return true;
     }
 
     @Override
@@ -107,7 +143,7 @@ public class ItemServiceImpl implements ItemService {
                     item.setItemStock(itemStock);
 
                     Promotion promotion = promotionMapper.selectByItemId(item.getId());
-                    if(promotion.getStatus()){
+                    if(promotion.checkStatus()){
                         item.setPromotion(promotion);
                     }
                     return item;
@@ -142,7 +178,7 @@ public class ItemServiceImpl implements ItemService {
             return item;
         }
         //mysql
-        item = getById(itemId);
+        item = this.getById(itemId);
         if(item!=null){
             itemCache.put(key, item);
             redisTemplate.opsForValue().set(key, item, 3, TimeUnit.MINUTES);

@@ -29,11 +29,20 @@ public interface ItemService {
     boolean decreaseStock(Integer itemId,Integer amount);
 
     /**
-     * 从缓存中减库存
+     * 预减redis库存
+     * @param itemId
+     * @param amount
      * @return
      */
     boolean decreaseStockInCache(Integer itemId,Integer amount);
 
+    /**
+     * 回补redis库存
+     * @param itemId
+     * @param amount
+     * @return
+     */
+    boolean increaseStockInCache(Integer itemId, Integer amount);
     /**
      * 更新销量
      * @param itemId

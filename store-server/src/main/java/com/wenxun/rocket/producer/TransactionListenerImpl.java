@@ -92,6 +92,7 @@ public class TransactionListenerImpl implements RocketMQLocalTransactionListener
         orderDTO.setItemId(param.getInteger("itemId"));
         orderDTO.setAmount(param.getInteger("amount"));
         orderDTO.setUserId(param.getInteger("userId"));
+        orderDTO.setPromotionId(param.getInteger("promotionId"));
 
         try {
             orderService.createOrder(orderDTO);

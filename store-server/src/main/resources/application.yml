@@ -22,9 +22,9 @@ spring:
       url: jdbc:mysql://${wenxun.datasource.host}:${wenxun.datasource.port}/${wenxun.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${wenxun.datasource.username}
       password: ${wenxun.datasource.password}
-      initial-size: 5
-      min-idle: 5
-      max-active: 20
+      initial-size: 50
+      min-idle: 50
+      max-active: 200
     type:  com.alibaba.druid.pool.DruidDataSource
 
   redis:
@@ -36,9 +36,9 @@ spring:
   task:
     execution:
       pool:
-        core-size: 5
-        max-size: 20
-        queue-capacity: 50
+        core-size: 50
+        max-size: 200
+        queue-capacity: 100
 
 # mybatis 配置
 mybatis:

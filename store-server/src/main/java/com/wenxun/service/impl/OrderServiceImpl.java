@@ -91,6 +91,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void prepareOrder(OrderTokenDTO orderDTO) {
         /**
+         * guava 令牌桶
          * 非阻塞的获取令牌，如果获取不到，就抛出异常
          */
         if(!rateLimiter.tryAcquire()){
@@ -163,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
         if(!flag){
             throw new StockNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH);
         }
-        log.info("缓存先删完成！");
+        log.info("缓存预减完成！");
 
 
         //生成订单
@@ -197,7 +198,7 @@ public class OrderServiceImpl implements OrderService {
 
             @Override
             public void onException(Throwable throwable) {
-            log.error("更新消息失败");
+            log.error("更新销量失败");
             }
         },60*1000);
 
@@ -235,11 +236,11 @@ public class OrderServiceImpl implements OrderService {
         args.put("amount", orderDTO.getAmount());
         args.put("userId",orderDTO.getUserId());
         args.put("promotionId",orderDTO.getPromotionId());
-        payload.put("itemStockLogId",itemStockLog.getId());
+        args.put("itemStockLogId",itemStockLog.getId());
 
         Message message= MessageBuilder.withPayload(payload.toString()).build();
         try {
-            TransactionSendResult result =rocketMQTemplate.sendMessageInTransaction("order:decrease_stock",message, args);
+            TransactionSendResult result =rocketMQTemplate.sendMessageInTransaction("order:decreaseStock",message, args);
             //发送消息到MQ
             if(result.getLocalTransactionState()== LocalTransactionState.ROLLBACK_MESSAGE
                     ||result.getLocalTransactionState()== LocalTransactionState.UNKNOW){
