@@ -8,7 +8,7 @@
 
 + v2:[2023.3.8]
 
-​	![yuque_diagram](C:\Users\wenxun\Desktop\code\store\img\yuque_diagram.png)
+​	![yuque_diagram](./img/yuque_diagram.png)
 
 + v1:[2023.2.24]
 
