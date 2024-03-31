@@ -16,3 +16,24 @@
 
 日志位置：在配置文件的路径
 
+
+
+### 配置java内存
+
+/bin/runserver.sh
+
+/bin/runbroker.sh
+
+里修改
+
+
+
+### linux 启动
+
+nameserver:
+
+`nohup sh mqnamesrv &`
+
+broker：
+
+`nohup sh bin/mqbroker -n localhost:9876  &`

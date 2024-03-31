@@ -13,10 +13,7 @@ wenxun:
     password: 123456
     database: 10
 
-  rabbitmq:
-    host: localhost
-    port:
 
   frontend:
     web:
-      path: http://123.56.181.20
+      path: http://123.56.181.20:5500

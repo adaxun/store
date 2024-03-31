@@ -3,9 +3,9 @@ server:
   port: 8082
   tomcat:
     threads:
-      min-spare: 50
-      max: 300
-    accept-count: 600
+      min-spare: 5
+      max: 30
+    accept-count: 60
 
 
 
@@ -22,9 +22,9 @@ spring:
       url: jdbc:mysql://${wenxun.datasource.host}:${wenxun.datasource.port}/${wenxun.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${wenxun.datasource.username}
       password: ${wenxun.datasource.password}
-      initial-size: 50
-      min-idle: 50
-      max-active: 200
+      initial-size: 5
+      min-idle: 10
+      max-active: 20
     type:  com.alibaba.druid.pool.DruidDataSource
 
   redis:
@@ -33,12 +33,14 @@ spring:
     password: ${wenxun.redis.password}
     database: ${wenxun.redis.database}
 
+
+#任务提交的线程池
   task:
     execution:
       pool:
-        core-size: 50
-        max-size: 200
-        queue-capacity: 100
+        core-size: 10
+        max-size: 20
+        queue-capacity: 10
 
 # mybatis 配置
 mybatis:

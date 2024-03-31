@@ -4,15 +4,15 @@
 
 预览网址：[web](123.56.181.x)
 
-### 当前流程图概要
+### 时序图概要
 
-+ v2:2023.3.8
-
-
-
-+ v1:2023.2.24
++ v2:[2023.3.8]
 
 
+
++ v1:[2023.2.24]
+
+  
 
 ### 数据库表：
 
@@ -34,13 +34,15 @@
 
 7. user_info：用户信息表
 
+### 压测：
 
+v2:本地测试轻松过千，1核2G服务器能部署上rocketMQ+redis+mysql+nginx就好了，没必要压了![image-20240329162302149](./img/image-20240329162302149.png)
 
-## 压测：
+------
 
-v2:![image-20240329162302149](./img/image-20240329162302149.png)
+v1:仅msyql(1核2G内存40G存储服务器,TPS最高80)，失败率高应该是德鲁伊线程池开小了吧
 
-
+![image-20240329201806244](./img/image-20240329201806244.png)
 
 ### TODO：
 
@@ -52,8 +54,20 @@ v2:![image-20240329162302149](./img/image-20240329162302149.png)
   + 也可以采用Redisson或Redis的bitmaps实现，需要再看一下[如何计算错误率]([Bloom filter - Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter))
 - [x] @PostConstruct 注解来实现启动时缓存预热和布隆过滤器写入 [实现方法参考]([面试官：SpringBoot如何实现缓存预热？ - 磊哥|www.javacn.site - 博客园 (cnblogs.com)](https://www.cnblogs.com/vipstone/p/17974747))
 - [ ] 订单ID修改为雪花算法实现
-- [ ] 实现缓存主动更新、定时更新等策略
 - [ ] 学习下Redis分布式锁
-- [ ] 针对读多写少情况，实现Redis集群支撑高可用
-- [ ] 再学习其他优化策略
+- [ ] 针对读多写少的特点，实现Redis集群支撑高可用
+- [ ] 学习实践其他优化策略
 - [ ] 静态资源使用MinIO或者阿里OSS对象存储(其实用JD的OSS也挺好
+
+------
+
+### seckill预览
+
+![test2](./img/test2.gif)
+
+
+
+### 参考
+
+[TaXueWWL/seckill-rocketmq: seckill-rocketmq-基于RocketMQ-电商高并发场景实战 (github.com)](https://github.com/TaXueWWL/seckill-rocketmq)
+

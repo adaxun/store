@@ -8,3 +8,12 @@ Linux中Nginx两个路径：
 
 如果没有配置https，要用http去请求
 
+
+
+启动nginx
+
+`sudo systemctl start nginx`
+
+检查状态
+
+`sudo systemctl status nginx`

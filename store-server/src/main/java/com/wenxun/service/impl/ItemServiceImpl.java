@@ -175,6 +175,7 @@ public class ItemServiceImpl implements ItemService {
         //再查 redis
         item = (Item) redisTemplate.opsForValue().get(key);
         if(item!=null){
+            itemCache.put(key,item);
             return item;
         }
         //mysql

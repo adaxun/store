@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Data
 public class Result<T> implements Serializable {
     /**
-     * code: 1失败
+     * code: 1失败 0成功
      * msg： 错误信息
      * data: 数据
      */
