@@ -4,11 +4,11 @@
 
 预览网址：[web](123.56.181.x)
 
-### 时序图概要
+### 流程的时序图
 
 + v2:[2023.3.8]
 
-
+​	![yuque_diagram](C:\Users\wenxun\Desktop\code\store\img\yuque_diagram.png)
 
 + v1:[2023.2.24]
 
@@ -70,4 +70,6 @@ v1:仅msyql(1核2G内存40G存储服务器,TPS最高80)，失败率高应该是�
 ### 参考
 
 [TaXueWWL/seckill-rocketmq: seckill-rocketmq-基于RocketMQ-电商高并发场景实战 (github.com)](https://github.com/TaXueWWL/seckill-rocketmq)
+
+。。。
 
