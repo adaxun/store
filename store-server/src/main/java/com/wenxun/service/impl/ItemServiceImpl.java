@@ -99,8 +99,11 @@ public class ItemServiceImpl implements ItemService {
         String stockKey ="item:stock:"+itemId ;
         long flag = redisTemplate.opsForValue().decrement(stockKey,amount);
         // <0 不够-> 扣减失败，还需回滚到扣库存前  ==0 正好售空，redis加入售空标志
+        // 1.redis 当前没有开启事务， 导致会出现少卖问题
+        // 2.用户秒杀后没付款 但是redis里已经删了库存 所以会存在少卖的问题：可以用reids或者rocketMQ来实现延时队列 回补库存
         if (flag<0){
-
+            increaseStockInCache(itemId,amount);
+            return false;
         }
         else if(flag==0){
            redisTemplate.opsForValue().set("item:stock:over:"+itemId,1);
